@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="facebook_app_id">934708900576073</string>
+    <string name="facebook_client_token">6a84e5b4c691d428833da4fbf98cd1a1</string>
+
+    <string name="fb_login_protocol_scheme">fb934708900576073</string>
+    <string name="app_name">EdGooo Androido</string>
+</resources>
