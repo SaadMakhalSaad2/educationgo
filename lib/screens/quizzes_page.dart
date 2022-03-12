@@ -1,6 +1,6 @@
 import 'package:educationgo/MyFirebaseServices.dart';
-import 'package:educationgo/models/Quiz.dart';
-import 'package:educationgo/screens/ExamRoom.dart';
+import 'package:educationgo/models/quiz.dart';
+import 'package:educationgo/screens/exam_room.dart';
 import 'package:flutter/material.dart';
 
 class Quizzes extends StatelessWidget {

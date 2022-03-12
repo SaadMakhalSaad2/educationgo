@@ -1,6 +1,6 @@
 import 'package:educationgo/MyFirebaseServices.dart';
-import 'package:educationgo/models/Subject.dart';
-import 'package:educationgo/screens/Quizzes.dart';
+import 'package:educationgo/models/subject.dart';
+import 'package:educationgo/screens/quizzes_page.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 

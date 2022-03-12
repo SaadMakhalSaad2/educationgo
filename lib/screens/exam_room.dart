@@ -1,22 +1,46 @@
+import 'package:educationgo/screens/quizzing_page.dart';
+import 'package:educationgo/screens/result_page.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
-import '../models/Question.dart';
-import '../models/Quiz.dart';
+import '../models/question.dart';
+import '../models/quiz.dart';
 
-class ExamRoom extends StatelessWidget {
+class ExamRoom extends StatefulWidget {
   final Quiz quiz;
   const ExamRoom({Key? key, required this.quiz}) : super(key: key);
+
+  @override
+  State<ExamRoom> createState() => _ExamRoomState();
+}
+
+class _ExamRoomState extends State<ExamRoom> {
+  var _currentIndex = 0;
+  var _totalScore = 0;
+
+  void _resetQuiz() {
+    setState(() {
+      _currentIndex = 0;
+      _totalScore = 0;
+    });
+  }
+
+  void _answerQuestion(int score) {
+    _totalScore += score;
+    setState(() {
+      _currentIndex = _currentIndex + 1;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(quiz.title),
+        title: Text(widget.quiz.title),
         automaticallyImplyLeading: false,
       ),
       body: FutureBuilder(
-          future: _downloadQuestions(quiz.questions),
+          future: _downloadQuestions(widget.quiz.questions),
           builder:
               (BuildContext context, AsyncSnapshot<List<Question>> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -26,11 +50,16 @@ class ExamRoom extends StatelessWidget {
                 return Text('Error: ${snapshot.error}');
               }
               if (snapshot.data != null && snapshot.data!.isNotEmpty) {
-                return ListView.builder(
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      return _buildQuestion(snapshot.data![index]);
-                    });
+                return _currentIndex < snapshot.data!.length
+                    ? QuizzingPage(
+                        answerQuestion: _answerQuestion,
+                        currentIndex: _currentIndex,
+                        questions: snapshot.data,
+                      )
+                    : ResultPage(
+                        finalScore: _totalScore,
+                        resetQuiz: _resetQuiz,
+                      );
               }
               return const Center(child: Text('question not found'));
             }
@@ -38,9 +67,6 @@ class ExamRoom extends StatelessWidget {
     );
   }
 
-  Widget _buildQuestion(Question question) {
-    return Text(question.text.toString());
-  }
 
   Future<List<Question>> _downloadQuestions(List<String> questions) async {
     List<Question> actualQuestions = [];
@@ -49,8 +75,8 @@ class ExamRoom extends StatelessWidget {
           await FirebaseDatabase.instance.ref('questions/$element').once();
       var data = event.snapshot.value as Map<dynamic, dynamic>;
 
-      Question question =
-          Question(data['id'], data['grade'], data['subject'], data['text']);
+      Question question = Question(data['id'], data['grade'], data['subject'],
+          data['text'], data['answers']);
       actualQuestions.add(question);
     }
 

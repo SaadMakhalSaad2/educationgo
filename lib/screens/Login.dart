@@ -1,8 +1,7 @@
 import 'package:educationgo/MyFirebaseServices.dart';
-import 'package:educationgo/models/UserProfile.dart';
+import 'package:educationgo/models/user_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 class Login extends StatelessWidget {
   const Login({Key? key}) : super(key: key);
