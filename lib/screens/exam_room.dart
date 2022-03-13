@@ -1,6 +1,9 @@
+import 'package:educationgo/models/answer_report.dart';
+import 'package:educationgo/my_firebase_services.dart';
+import 'package:educationgo/screens/home_page.dart';
 import 'package:educationgo/screens/quizzing_page.dart';
 import 'package:educationgo/screens/result_page.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../models/question.dart';
@@ -15,6 +18,8 @@ class ExamRoom extends StatefulWidget {
 }
 
 class _ExamRoomState extends State<ExamRoom> {
+  var userId = FirebaseAuth.instance.currentUser!.uid;
+
   var _currentIndex = 0;
   var _totalScore = 0;
 
@@ -27,59 +32,92 @@ class _ExamRoomState extends State<ExamRoom> {
 
   void _answerQuestion(int score) {
     _totalScore += score;
-    setState(() {
-      _currentIndex = _currentIndex + 1;
+    var questionId = widget.quiz.questions[_currentIndex];
+    var reportId = '${questionId}_$userId';
+    AnswerReport report = AnswerReport(questionId, userId, score);
+    MyFirebaseServices()
+        .writeData(report.toJson(), 'answer_reports/$reportId')
+        .then((value) {
+      print('report written');
+      setState(() {
+        _currentIndex = _currentIndex + 1;
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.quiz.title),
-        automaticallyImplyLeading: false,
+    return WillPopScope(
+      onWillPop: () async {
+        _showMyDialog();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.quiz.title),
+          automaticallyImplyLeading: false,
+        ),
+        body: FutureBuilder(
+            future:
+                MyFirebaseServices().downloadQuestions(widget.quiz.questions),
+            builder:
+                (BuildContext context, AsyncSnapshot<List<Question>> snapshot) {
+              return _result(snapshot);
+            }),
       ),
-      body: FutureBuilder(
-          future: _downloadQuestions(widget.quiz.questions),
-          builder:
-              (BuildContext context, AsyncSnapshot<List<Question>> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else {
-              if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              }
-              if (snapshot.data != null && snapshot.data!.isNotEmpty) {
-                return _currentIndex < snapshot.data!.length
-                    ? QuizzingPage(
-                        answerQuestion: _answerQuestion,
-                        currentIndex: _currentIndex,
-                        questions: snapshot.data,
-                      )
-                    : ResultPage(
-                        finalScore: _totalScore,
-                        resetQuiz: _resetQuiz,
-                      );
-              }
-              return const Center(child: Text('question not found'));
-            }
-          }),
     );
   }
 
+  Future<void> _showMyDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: const Text('Are you sure you want to leave quiz?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomePage()),
+                  (Route<dynamic> route) => false,
+                );
+              },
+              child: const Text('YES'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('NO'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-  Future<List<Question>> _downloadQuestions(List<String> questions) async {
-    List<Question> actualQuestions = [];
-    for (var element in questions) {
-      DatabaseEvent event =
-          await FirebaseDatabase.instance.ref('questions/$element').once();
-      var data = event.snapshot.value as Map<dynamic, dynamic>;
-
-      Question question = Question(data['id'], data['grade'], data['subject'],
-          data['text'], data['answers']);
-      actualQuestions.add(question);
+  Widget _result(AsyncSnapshot<List<Question>> snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    } else {
+      if (snapshot.hasError) {
+        return Text('Error: ${snapshot.error}');
+      }
+      if (snapshot.data != null && snapshot.data!.isNotEmpty) {
+        return _currentIndex < snapshot.data!.length
+            ? QuizzingPage(
+                answerQuestion: _answerQuestion,
+                currentIndex: _currentIndex,
+                questions: snapshot.data,
+              )
+            : ResultPage(
+                finalScore: _totalScore,
+                resetQuiz: _resetQuiz,
+              );
+      }
+      return const Center(child: Text('question not found'));
     }
-
-    return actualQuestions;
   }
 }

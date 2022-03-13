@@ -1,3 +1,4 @@
+import 'package:educationgo/models/question.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
@@ -79,7 +80,21 @@ class MyFirebaseServices {
           finalQuestions);
       quizzes.add(q);
     }
-
     return quizzes;
+  }
+
+  
+    Future<List<Question>> downloadQuestions(List<String> questions) async {
+    List<Question> actualQuestions = [];
+    for (var element in questions) {
+      DatabaseEvent event =
+          await FirebaseDatabase.instance.ref('questions/$element').once();
+      var data = event.snapshot.value as Map<dynamic, dynamic>;
+
+      Question question = Question(data['id'], data['grade'], data['subject'],
+          data['text'], data['answers']);
+      actualQuestions.add(question);
+    }
+    return actualQuestions;
   }
 }

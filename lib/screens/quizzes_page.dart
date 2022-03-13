@@ -1,4 +1,4 @@
-import 'package:educationgo/MyFirebaseServices.dart';
+import 'package:educationgo/my_firebase_services.dart';
 import 'package:educationgo/models/quiz.dart';
 import 'package:educationgo/screens/exam_room.dart';
 import 'package:flutter/material.dart';

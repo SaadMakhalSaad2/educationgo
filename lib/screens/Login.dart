@@ -1,4 +1,4 @@
-import 'package:educationgo/MyFirebaseServices.dart';
+import 'package:educationgo/my_firebase_services.dart';
 import 'package:educationgo/models/user_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
