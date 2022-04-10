@@ -24,10 +24,11 @@ class QuizzingPage extends StatelessWidget {
         ),
         ...(questions![currentIndex].answers).map((a) {
           var answer = a as Map<Object?, Object?>;
-          
+
           return AnswerWidget(
               answerSelectedHandler: () => answerQuestion(answer['score']),
-              answerText: answer['text'].toString());
+              answerText: answer['text'].toString(),
+              questionId: questions![currentIndex].id,);
         })
       ],
     );

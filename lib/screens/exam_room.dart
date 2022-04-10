@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../models/question.dart';
 import '../models/quiz.dart';
+import '../widgets/question_navigation.dart';
 
 class ExamRoom extends StatefulWidget {
   final Quiz quiz;
@@ -19,6 +20,7 @@ class ExamRoom extends StatefulWidget {
 
 class _ExamRoomState extends State<ExamRoom> {
   var userId = FirebaseAuth.instance.currentUser!.uid;
+  List<Question>? questions = [];
 
   var _currentIndex = 0;
   var _totalScore = 0;
@@ -45,6 +47,22 @@ class _ExamRoomState extends State<ExamRoom> {
     });
   }
 
+  void _moveNext() {
+    if (_currentIndex < questions!.length) {
+      setState(() {
+        _currentIndex = _currentIndex + 1;
+      });
+    }
+  }
+
+  void _movePrevious() {
+    if (_currentIndex > 0) {
+      setState(() {
+        _currentIndex = _currentIndex - 1;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -55,20 +73,30 @@ class _ExamRoomState extends State<ExamRoom> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.quiz.title),
-          automaticallyImplyLeading: false,
+          automaticallyImplyLeading: true,
         ),
-        body: FutureBuilder(
-            future:
-                MyFirebaseServices().downloadQuestions(widget.quiz.questions),
-            builder:
-                (BuildContext context, AsyncSnapshot<List<Question>> snapshot) {
-              return _result(snapshot);
-            }),
+        body: Column(
+          children: [
+            FutureBuilder(
+                future: MyFirebaseServices()
+                    .downloadQuestions(widget.quiz.questions),
+                builder: (BuildContext context,
+                    AsyncSnapshot<List<Question>> snapshot) {
+                  questions = snapshot.data;
+                  return _result(snapshot);
+                }),
+            QuestionNavigation(
+              moveNext: _moveNext,
+              movePrevious: _movePrevious,
+            )
+          ],
+        ),
       ),
     );
   }
 
   Future<void> _showMyDialog() async {
+    print('show dialog');
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
