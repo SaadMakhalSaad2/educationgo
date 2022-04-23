@@ -13,9 +13,8 @@ class Login extends StatelessWidget {
         TextButton(
             onPressed: () async {
               MyFirebaseServices().signInWithFacebook().then((value) {
-                if (value.additionalUserInfo!.isNewUser) {
-                  writeUser(value);
-                }
+                if (value.additionalUserInfo!.isNewUser) {}
+                writeUser(value);
               });
             },
             child: const Text('Login with FB'))

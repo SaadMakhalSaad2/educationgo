@@ -2,8 +2,7 @@ import 'package:educationgo/models/user_profile.dart';
 import 'package:educationgo/my_firebase_services.dart';
 import 'package:educationgo/models/subject.dart';
 import 'package:educationgo/screens/quizzes_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:educationgo/widgets/home_app_bar.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -14,15 +13,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  UserProfile profile = UserProfile(
-      'id',
-      'email',
-      'user_name',
-      'https://cdn2.psychologytoday.com/assets/styles/profile_teaser_micro/public/field_user_blogger_photo/7.jpg?itok=UDJ4N1sg',
-      'dateJoined');
   String gradeValue = 'Grade 11';
   int subjectsCount = 5;
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,35 +24,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  _downloadProfile() async {
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref('users/${FirebaseAuth.instance.currentUser!.uid}');
-    DatabaseEvent event = await ref.once();
-    UserProfile p =
-        UserProfile.fromJson(event.snapshot.value as Map<Object?, Object?>);
-    setState(() {
-      profile = p;
-    });
-  }
-
   _buildAppBar() {
     return AppBar(
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20.0,
-                backgroundImage: NetworkImage(profile.imageUrl.toString()),
-                backgroundColor: Colors.transparent,
-              ),
-              const SizedBox(
-                width: 4.0,
-              ),
-              Text('Hi, ${profile.name.toString()}'),
-            ],
-          ),
+          FutureBuilder(
+              future:MyFirebaseServices().downloadProfile(),
+              builder:
+                  (BuildContext context, AsyncSnapshot<UserProfile> snapshot) {
+                return AppBarContent(
+                  snapshot: snapshot,
+                );
+              }),
           DropdownButton<String>(
             value: gradeValue,
             hint: const Text('Choose grade'),
@@ -135,7 +112,6 @@ class _HomePageState extends State<HomePage> {
 
   _moveToQuizzes(Subject subject) {
     String id = subject.name + '_' + gradeValue;
-    print(id);
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => Quizzes(queryId: id)),
